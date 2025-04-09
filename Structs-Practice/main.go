@@ -21,6 +21,8 @@ type outputtable interface {
 }
 
 func main() {
+	result := add(1, 3)
+	fmt.Println(result)
 	title, content := getNoteData()
 	text := getTodoText()
 	userNote, err := note.New(title, content)
@@ -43,6 +45,11 @@ func main() {
 		fmt.Printf("note is not saved")
 	}
 
+}
+
+// Generics
+func add[T int | float64 | string](a, b T) T {
+	return a + b
 }
 
 func outputData(data outputtable) error {
