@@ -46,4 +46,33 @@ func main() {
 	// Length and capacity grow as needed
 	fmt.Println("Dynamic List Length:", len(dynamicList))   // 5
 	fmt.Println("Dynamic List Capacity:", cap(dynamicList)) // Capacity increases automatically
+
+	// --- Maps Example ---
+	// Maps are key-value data structures in Go.
+	// They allow you to associate a value with a unique key.
+
+	// Create a map with string keys and int values
+	ages := make(map[string]int)
+
+	// Add key-value pairs to the map
+	ages["Alice"] = 25
+	ages["Bob"] = 30
+
+	fmt.Println("ages:", ages)
+
+	// Retrieve a value by key
+	fmt.Println("Alice's age:", ages["Alice"])
+
+	// Check if a key exists
+	age, exists := ages["Charlie"]
+	if exists {
+		fmt.Println("Charlie's age:", age)
+	} else {
+		fmt.Println("Charlie is not in the map.")
+	}
+
+	// Iterate over the map
+	for name, age := range ages {
+		fmt.Printf("%s is %d years old\n", name, age)
+	}
 }
