@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Golang Enterprise Architect Prep Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .tab-active {
+            border-bottom: 2px solid #0f766e;
+            color: #0f766e;
+            font-weight: 600;
+        }
+        .tab-inactive {
+            color: #78716c;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
+        .accordion-active .accordion-content {
+            max-height: 4000px; 
+            transition: max-height 0.5s ease-in;
+        }
+        .accordion-active .chevron {
+            transform: rotate(180deg);
+        }
+    </style>
+</head>
+<body class="bg-[#faf9f6] text-stone-800 font-sans antialiased">
+
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <header class="mb-8 border-b border-stone-200 pb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-stone-900 tracking-tight">Golang Enterprise Prep</h1>
+                <p class="text-stone-500 mt-1">Deep-Dive System Architecture, Concurrency & Design</p>
+            </div>
+            <div class="flex space-x-2 bg-stone-100 p-1 rounded-lg">
+                <button onclick="app.switchTab('overview')" id="tab-overview" class="px-4 py-2 rounded-md text-sm font-medium transition-colors bg-white text-teal-700 shadow-sm">Overview</button>
+                <button onclick="app.switchTab('concepts')" id="tab-concepts" class="px-4 py-2 rounded-md text-sm font-medium transition-colors text-stone-600 hover:text-stone-900">Deep Dives</button>
+                <button onclick="app.switchTab('performance')" id="tab-performance" class="px-4 py-2 rounded-md text-sm font-medium transition-colors text-stone-600 hover:text-stone-900">Performance Data</button>
+            </div>
+        </header>
+
+        <main>
+            <!-- OVERVIEW TAB -->
+            <section id="section-overview" class="block animate-fade-in">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold text-stone-800 mb-3">Strategic Study Focus</h2>
+                    <p class="text-stone-600 leading-relaxed max-w-3xl">
+                        This section provides a high-level overview of the most critical topics in enterprise Go interviews. Unlike Java or C# interviews that often focus on framework features (like Spring annotations), senior Go interviews heavily prioritize your understanding of system-level operations: memory allocation mechanics, concurrency race conditions, and scalable system design.
+                    </p>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                    <h3 class="text-lg font-medium text-stone-800 mb-4 text-center">Topic Priority Matrix (Frequency vs. Complexity)</h3>
+                    <div class="chart-container">
+                        <canvas id="overviewChart"></canvas>
+                    </div>
+                    <div class="mt-4 text-sm text-stone-500 text-center">
+                        Bubble size indicates the weight/importance of the topic in senior-level interviews.
+                    </div>
+                </div>
+
+                <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-teal-50 p-5 rounded-xl border border-teal-100">
+                        <div class="text-teal-800 font-semibold mb-2">Memory Focus</div>
+                        <p class="text-sm text-teal-700">Understand slices, escape analysis, and GC pressure to prevent OOM kills in high-throughput APIs.</p>
+                    </div>
+                    <div class="bg-amber-50 p-5 rounded-xl border border-amber-100">
+                        <div class="text-amber-800 font-semibold mb-2">Concurrency Focus</div>
+                        <p class="text-sm text-amber-700">Master Mutexes, Channels, and thread-safety to prevent fatal data races and map panics.</p>
+                    </div>
+                    <div class="bg-rose-50 p-5 rounded-xl border border-rose-100">
+                        <div class="text-rose-800 font-semibold mb-2">System Focus</div>
+                        <p class="text-sm text-rose-700">Grasp DB connection pooling and pessimistic vs. optimistic locking for massive horizontal scale.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CONCEPTS TAB -->
+            <section id="section-concepts" class="hidden animate-fade-in">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold text-stone-800 mb-3">Concept Deep Dives (Questions 1-8)</h2>
+                    <p class="text-stone-600 leading-relaxed max-w-3xl">
+                        Explore the detailed mechanics of Go's core primitives. This interactive explorer expands upon the textual Q&A document, providing architectural context, explicit warnings about common production pitfalls, and senior-level code examples that demonstrate the "Go Way" of building systems.
+                    </p>
+                </div>
+                <div id="accordion-container" class="space-y-4"></div>
+            </section>
+
+            <!-- PERFORMANCE TAB -->
+            <section id="section-performance" class="hidden animate-fade-in">
+                <div class="mb-8">
+                    <h2 class="text-2xl font-semibold text-stone-800 mb-3">Architectural Impacts</h2>
+                    <p class="text-stone-600 leading-relaxed max-w-3xl">
+                        True architectural knowledge requires understanding <em>why</em> a pattern is chosen based on its quantitative impact. This section visualizes the two most critical performance traps discussed in the text: the cost of hidden memory reallocations, and the CPU bottleneck of lock contention.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h3 class="text-lg font-medium text-stone-800 mb-2">Slice Capacity Exhaustion</h3>
+                        <p class="text-sm text-stone-500 mb-4">Visualizing the reallocation process when `append()` exceeds capacity.</p>
+                        <div class="chart-container h-80">
+                            <canvas id="sliceChart"></canvas>
+                        </div>
+                        <p class="text-xs text-stone-500 mt-4 leading-tight">
+                            <strong>Takeaway:</strong> Adding item 5 forces a new array allocation (doubling capacity from 4 to 8) and copies old data. Pre-allocate using <code>make([]int, 0, target)</code>.
+                        </p>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-stone-200">
+                        <h3 class="text-lg font-medium text-stone-800 mb-2">sync.RWMutex vs sync.Map</h3>
+                        <p class="text-sm text-stone-500 mb-4">Relative throughput under extreme load (50k+ Goroutines).</p>
+                        <div class="chart-container h-80">
+                            <canvas id="mutexChart"></canvas>
+                        </div>
+                        <p class="text-xs text-stone-500 mt-4 leading-tight">
+                            <strong>Takeaway:</strong> <code>sync.Map</code> is terrible for constant overwrites of the same key due to internal synchronization overhead. Use it only for append-only data.
+                        </p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const qaData = [
+            {
+                id: 'q1',
+                title: "1. Map Internals & Hash Collisions",
+                category: "Data Structures",
+                content: `
+                    <div class="mb-4">
+                        <p class="text-stone-700 leading-relaxed mb-3"><strong>The Core Concept:</strong> Under the hood, a Go map is a highly optimized hash table managed by a struct called <code class="bg-stone-100 text-teal-700 px-1 py-0.5 rounded text-sm font-mono">hmap</code>. Unlike simplistic arrays, a map is fundamentally an array of "buckets." Every single bucket is precisely sized to hold exactly 8 key-value pairs.</p>
+                        <p class="text-stone-700 leading-relaxed"><strong>Why this matters for interviews:</strong> Interviewers want to know if you understand what happens when a hash collision occurs. When a key is inserted, it hashes to a specific bucket. If a collision occurs, Go simply fills the next available slot out of the 8. Once all 8 are full, an Overflow Bucket is created and chained.</p>
+                    </div>
+                    
+                    <div class="bg-stone-50 p-4 rounded-lg border border-stone-200 overflow-x-auto hide-scrollbar mb-6">
+                        <div class="flex gap-4 min-w-max">
+                            <div class="bg-white border-2 border-teal-600 rounded-md p-2 w-48 shadow-sm relative">
+                                <div class="text-xs font-bold text-teal-800 mb-2 border-b border-teal-100 pb-1">Bucket #3 (Base)</div>
+                                <div class="grid grid-cols-2 gap-1">
+                                    <div class="bg-teal-50 text-teal-700 text-[10px] p-1 text-center rounded border border-teal-100">Slot 0: [K,V]</div>
+                                    <div class="bg-teal-50 text-teal-700 text-[10px] p-1 text-center rounded border border-teal-100">Slot 1: [K,V]</div>
+                                    <div class="bg-teal-50 text-teal-700 text-[10px] p-1 text-center rounded border border-teal-100">Slot 2: [K,V]</div>
+                                    <div class="bg-teal-50 text-teal-700 text-[10px] p-1 text-center rounded border border-teal-100">...</div>
+                                    <div class="col-span-2 bg-rose-50 text-rose-700 text-[10px] p-1 text-center rounded border border-rose-200 font-semibold mt-1">Slot 7: FULL</div>
+                                </div>
+                                <div class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 text-teal-600">&#8595; ptr</div>
+                            </div>
+                            
+                            <div class="bg-white border-2 border-dashed border-stone-400 rounded-md p-2 w-48 shadow-sm mt-8 opacity-90">
+                                <div class="text-xs font-bold text-stone-600 mb-2 border-b border-stone-100 pb-1">Overflow Bucket</div>
+                                <div class="grid grid-cols-2 gap-1">
+                                    <div class="bg-stone-100 text-stone-600 text-[10px] p-1 text-center rounded">Slot 0: [K,V]</div>
+                                    <div class="bg-stone-50 text-stone-400 text-[10px] p-1 text-center rounded border border-stone-100 border-dashed">Slot 1: empty</div>
+                                </div>
+                                <div class="mt-2 text-[10px] text-stone-500 text-center italic">Created when base is full</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="font-semibold text-stone-900 mb-2">Code Example: Basic Usage & The Comma-Ok Idiom</h4>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>cache := make(map[string]int)
+cache["taylor_swift"] = 50000
+
+// Safely checking if a key exists without getting a false 0
+tickets, exists := cache["ed_sheeran"]
+if !exists {
+    fmt.Println("Ed Sheeran is not in the cache!")
+}</code></pre>
+                `
+            },
+            {
+                id: 'q2',
+                title: "2. Concurrent Map Writes & Thread Safety",
+                category: "Concurrency",
+                content: `
+                    <div class="bg-rose-50 border-l-4 border-rose-500 p-4 mb-6 rounded-r-md">
+                        <div class="flex items-start">
+                            <span class="text-rose-600 text-xl mr-3">&#9888;</span>
+                            <div>
+                                <h4 class="text-rose-800 font-bold mb-1">Fatal Panic</h4>
+                                <p class="text-rose-700 text-sm">If two Goroutines write to a built-in map simultaneously, Go instantly crashes the application with <code class="font-mono bg-rose-100 px-1 rounded">fatal error: concurrent map writes</code>.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="mb-4 text-stone-700"><strong>Architectural Context:</strong> Why does it crash instead of just throwing a try/catch error? If Goroutine A writes a new key, the map might need to resize itself (doubling buckets and evacuating data to new memory addresses). If Goroutine B reads during this exact millisecond, it reads corrupted garbage memory. Go's design philosophy strictly prefers violent termination over allowing your system to process and save corrupted data silently.</p>
+                    
+                    <h4 class="font-semibold text-stone-900 mt-6 mb-2">Code Example: The Standard Fix (sync.RWMutex)</h4>
+                    <p class="text-sm text-stone-600 mb-3">To fix this, we encapsulate the map within a struct alongside a Mutex, creating a single access point. We use <code>sync.RWMutex</code> to allow infinite concurrent readers, while exclusively locking writers.</p>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>type SafeMap struct {
+    mu sync.RWMutex
+    m  map[string]int
+}
+
+func (sm *SafeMap) Set(key string, value int) {
+    sm.mu.Lock()         // Blocks ALL other readers and writers
+    defer sm.mu.Unlock() 
+    sm.m[key] = value
+}
+
+func (sm *SafeMap) Get(key string) (int, bool) {
+    sm.mu.RLock()         // Allows concurrent readers
+    defer sm.mu.RUnlock() 
+    val, exists := sm.m[key]
+    return val, exists
+}</code></pre>
+                `
+            },
+            {
+                id: 'q3',
+                title: "3. sync.Map vs sync.RWMutex",
+                category: "Concurrency",
+                content: `
+                    <p class="mb-4 text-stone-700"><strong>The Bottleneck:</strong> A <code class="font-mono text-teal-700">sync.RWMutex</code> acts as a CPU bottleneck if 50,000 Goroutines try to write to the map at once—they all form a single-file line waiting for the lock. <code class="font-mono text-teal-700">sync.Map</code> is a specialized, built-in lock-free map that relies on atomic operations to bypass Mutexes. However, it is deeply misunderstood by beginners.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-teal-50 border border-teal-200 p-4 rounded-lg shadow-sm">
+                            <div class="text-teal-800 font-bold mb-2">✅ Use sync.Map for:</div>
+                            <ul class="text-sm text-teal-700 list-disc pl-4 space-y-1">
+                                <li><strong>Append-only caches:</strong> Written once, read millions of times.</li>
+                                <li><strong>Disjoint keys:</strong> Thousands of writers updating completely different keys (e.g., tracking WebSocket connections).</li>
+                            </ul>
+                        </div>
+                        <div class="bg-rose-50 border border-rose-200 p-4 rounded-lg shadow-sm">
+                            <div class="text-rose-800 font-bold mb-2">❌ DO NOT use for:</div>
+                            <p class="text-sm text-rose-700">Constant overwrites to the same key. The internal synchronization overhead between its internal "dirty" map and "read" map will make it much slower than a standard Mutex.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-semibold text-stone-900 mb-2">Code Example: Using sync.Map</h4>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>var sm sync.Map
+
+// Store
+sm.Store("session_123", "active")
+
+// Load
+val, ok := sm.Load("session_123")
+
+// Iterate safely
+sm.Range(func(key, value interface{}) bool {
+    fmt.Printf("%v: %v\\n", key, value)
+    return true // Return false to break early
+})</code></pre>
+                `
+            },
+            {
+                id: 'q4',
+                title: "4. TreeMap & Ordered Maps in Go",
+                category: "Data Structures",
+                content: `
+                    <p class="mb-4 text-stone-700">Because Go maps use randomized hash buckets, <strong>iteration order is never guaranteed</strong>. If you loop through a map twice, the keys may print out in a completely different order. Unlike Java, Go does not have a built-in <code class="font-mono text-teal-700">TreeMap</code> to solve this natively.</p>
+                    <p class="mb-4 text-stone-700"><strong>The Pattern:</strong> To maintain order, you must maintain a separate slice of the keys, sort that slice, and iterate through the slice to look up the map values.</p>
+
+                    <h4 class="font-semibold text-stone-900 mb-2">Code Example: Sorting a Map</h4>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>ages := map[string]int{"Charlie": 35, "Alice": 28, "Bob": 32}
+
+// 1. Extract keys to a slice
+keys := make([]string, 0, len(ages))
+for k := range ages {
+    keys = append(keys, k)
+}
+
+// 2. Sort the slice
+sort.Strings(keys)
+
+// 3. Iterate over the sorted keys
+for _, k := range keys {
+    fmt.Printf("%s: %d\\n", k, ages[k])
+}</code></pre>
+                `
+            },
+            {
+                id: 'q5',
+                title: "5. Slice Internals & Capacity Exhaustion",
+                category: "Memory & Types",
+                content: `
+                    <p class="mb-4 text-stone-700"><strong>The Hidden Truth:</strong> A slice in Go does not actually store any data. It is merely a 24-byte struct containing a Pointer to a hidden backing array, the Length, and the Capacity.</p>
+                    <p class="mb-4 text-stone-700"><strong>The Performance Trap:</strong> When a slice is full (Len == Cap), calling <code class="font-mono text-teal-700">append()</code> forces Go to allocate a brand new backing array, copy all the old data over, and abandon the old array (creating severe GC pressure). In a tight loop, this brings an API to a crawl.</p>
+
+                    <h4 class="font-semibold text-stone-900 mb-2">Code Example: Pre-allocating to save Memory</h4>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>// ❌ Bad: Forces multiple allocations/copies as it grows dynamically
+badSlice := []int{}
+
+// ✅ Good: Pre-allocate capacity (100) to prevent GC pressure
+goodSlice := make([]int, 0, 100)
+
+for i := 0; i < 100; i++ {
+    goodSlice = append(goodSlice, i)
+    // Capacity stays exactly 100. Zero memory allocations inside this loop!
+}</code></pre>
+                `
+            },
+            {
+                id: 'q6',
+                title: "6. Struct Comparability & Interface Panics",
+                category: "Memory & Types",
+                content: `
+                    <p class="mb-4 text-stone-700">Using the <code class="bg-stone-100 text-teal-700 px-1 py-0.5 rounded text-sm font-mono">==</code> operator on two structs compares them <strong>by value</strong> (checking if every field matches perfectly). However, Go has strict comparability rules.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="bg-white border border-stone-200 p-4 rounded-lg shadow-sm">
+                            <div class="text-teal-700 font-bold mb-2 flex items-center"><span class="text-lg mr-2">&#10003;</span> Comparable</div>
+                            <p class="text-sm text-stone-600">Primitives (strings, ints, bools), pointers, and <strong>fixed-size arrays</strong>.</p>
+                        </div>
+                        <div class="bg-white border border-stone-200 p-4 rounded-lg shadow-sm">
+                            <div class="text-rose-700 font-bold mb-2 flex items-center"><span class="text-lg mr-2">&#10007;</span> Uncomparable</div>
+                            <p class="text-sm text-stone-600"><strong>Slices</strong>, <strong>Maps</strong>, and <strong>Functions</strong>.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="font-semibold text-stone-900 mb-2">Code Example: The Interface Panic Trap</h4>
+                    <p class="text-sm text-stone-600 mb-3">If an interface field holds a map at runtime, compilation succeeds, but execution fails violently.</p>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>type APIPayload struct {
+    ID       string
+    Metadata interface{} 
+}
+
+p1 := APIPayload{ID: "1", Metadata: map[string]string{"type": "A"}}
+p2 := APIPayload{ID: "1", Metadata: map[string]string{"type": "A"}}
+
+// 💥 RUNTIME PANIC: comparing uncomparable type map[string]string
+// if p1 == p2 { }
+
+// ✅ Safe Fix
+if p1.ID == p2.ID { fmt.Println("Match!") }</code></pre>
+                `
+            },
+            {
+                id: 'q7',
+                title: "7. String Immutability & Memory Leaks",
+                category: "Memory & Types",
+                content: `
+                    <p class="mb-4 text-stone-700">In Go, strings are <strong>immutable</strong>. They are essentially read-only slices of bytes. Once a string is created, you can never change the data inside of it.</p>
+                    
+                    <h4 class="font-semibold text-stone-900 mb-2">The Danger of Loop Concatenation</h4>
+                    <p class="text-sm text-stone-600 mb-4">Using the <code class="font-mono bg-stone-100 px-1 rounded">+=</code> operator in a loop forces Go to allocate a <strong>completely new block of memory</strong> every single iteration. It copies the old string, copies the new string, and abandons the previous string for the Garbage Collector. Doing this 10,000 times will freeze your application under GC pressure.</p>
+                    
+                    <h4 class="font-semibold text-stone-900 mb-2">Code Example: The Enterprise Fix</h4>
+                    <p class="text-sm text-stone-600 mb-3">Use <code>strings.Builder</code>. It uses a dynamic byte slice internally to accumulate data, converting to a string only once.</p>
+                    <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>// ✅ EFFICIENT: Zero intermediate string allocations
+var builder strings.Builder
+builder.Grow(40000) // Pre-allocate capacity for maximum speed
+
+for i := 0; i < 10000; i++ {
+    builder.WriteString("data")
+}
+
+// Convert to immutable string exactly once at the end
+result := builder.String()</code></pre>
+                `
+            },
+            {
+                id: 'q8',
+                title: "8. Structs vs Interfaces (Line-by-Line Breakdown)",
+                category: "Design Patterns",
+                content: `
+                    <div class="mb-6">
+                        <p class="text-stone-700 leading-relaxed mb-4">Let's completely break this down line-by-line. In Object-Oriented Programming (OOP), we use <strong>Polymorphism</strong> to make our code flexible. Go achieves this by separating the "Job Description" (Interface) from the "Worker" (Struct).</p>
+                    </div>
+
+                    <div class="space-y-6">
+                        <!-- Step 1 -->
+                        <div>
+                            <h4 class="font-bold text-indigo-900 mb-2 flex items-center gap-2">
+                                <span class="bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded text-sm">Step 1</span> The Job Description (Interface)
+                            </h4>
+                            <p class="text-sm text-stone-600 mb-2">An interface holds NO data and writes NO logic. It only defines the rule: <em>"To be hired, you must have a method called Pay that takes a float64."</em></p>
+                            <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>type PaymentProcessor interface {
+    Pay(amount float64) bool
+}</code></pre>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div>
+                            <h4 class="font-bold text-teal-900 mb-2 flex items-center gap-2">
+                                <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded text-sm">Step 2</span> Worker #1 (The Stripe Struct)
+                            </h4>
+                            <p class="text-sm text-stone-600 mb-2">A struct is the actual worker. It holds the physical data (<code class="font-mono text-xs">APIKey</code>) and the receiver function <code class="font-mono text-xs">func (s Stripe)</code> binds the "skill" (the logic) directly to this worker.</p>
+                            <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>// The Worker's Data
+type Stripe struct { 
+    APIKey string 
+}
+
+// The Worker's Skill. Because this perfectly matches the interface rule, 
+// Go automatically considers 'Stripe' to be a 'PaymentProcessor'.
+func (s Stripe) Pay(amount float64) bool { 
+    fmt.Printf("Stripe using key %s to pay $%.2f\\n", s.APIKey, amount)
+    return true 
+}</code></pre>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div>
+                            <h4 class="font-bold text-teal-900 mb-2 flex items-center gap-2">
+                                <span class="bg-teal-100 text-teal-800 px-2 py-0.5 rounded text-sm">Step 3</span> Worker #2 (The PayPal Struct)
+                            </h4>
+                            <p class="text-sm text-stone-600 mb-2">We can build a completely different worker. It has different data (<code class="font-mono text-xs">Email</code>) and prints a different message, but it still has the <code class="font-mono text-xs">Pay()</code> skill.</p>
+                            <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>// Different Data
+type PayPal struct { 
+    Email string 
+}
+
+// Same Skill, different implementation.
+func (p PayPal) Pay(amount float64) bool { 
+    fmt.Printf("PayPal sending receipt to %s for $%.2f\\n", p.Email, amount)
+    return true 
+}</code></pre>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div>
+                            <h4 class="font-bold text-amber-900 mb-2 flex items-center gap-2">
+                                <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-sm">Step 4</span> The Manager (Polymorphism)
+                            </h4>
+                            <p class="text-sm text-stone-600 mb-2">Here is the magic. The <code class="font-mono text-xs">Checkout</code> function acts as the store manager. It does <strong>not</strong> ask for Stripe or PayPal. It asks for the <em>Interface</em>. It doesn't care who does the work, as long as they can <code class="font-mono text-xs">Pay()</code>.</p>
+                            <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>func Checkout(processor PaymentProcessor, amount float64) {
+    // The manager blindly trusts the worker to do their specific job
+    processor.Pay(amount) 
+}</code></pre>
+                        </div>
+
+                        <!-- Step 5 -->
+                        <div>
+                            <h4 class="font-bold text-stone-900 mb-2 flex items-center gap-2">
+                                <span class="bg-stone-200 text-stone-800 px-2 py-0.5 rounded text-sm">Step 5</span> Execution
+                            </h4>
+                            <p class="text-sm text-stone-600 mb-2">In our main function, we hire the workers and pass them to the exact same manager function. This makes our code infinitely expandable!</p>
+                            <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>func main() {
+    // 1. Hire the workers & give them their tools (Data)
+    stripeWorker := Stripe{APIKey: "sk_123"}
+    paypalWorker := PayPal{Email: "bob@test.com"}
+
+    // 2. Pass different workers into the exact same function!
+    Checkout(stripeWorker, 50.00) 
+    Checkout(paypalWorker, 25.50) 
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <!-- NEW EXAMPLES ADDED HERE -->
+                    <div class="mt-10 pt-8 border-t border-stone-200">
+                        <h4 class="font-bold text-stone-900 mb-4 text-xl">Example 2: The Notification System</h4>
+                        <p class="text-stone-700 leading-relaxed mb-4">Let's look at another highly common enterprise scenario. You need to send alerts to users. Sometimes via Email, sometimes via SMS. Notice how the structs act as completely different workers with different tools (fields), but they satisfy the same manager (interface).</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
+                            <div class="bg-sky-50 border border-sky-200 p-4 rounded-xl shadow-sm">
+                                <h5 class="font-bold text-sky-900 mb-2">Worker 1: EmailSender</h5>
+                                <p class="text-sm text-sky-800 mb-2">Needs SMTP server details (its tools) to do its job.</p>
+                                <pre class="bg-sky-900 text-sky-100 p-3 rounded-lg text-xs font-mono overflow-x-auto"><code>type EmailSender struct {
+    SMTPServer string
+}
+
+func (e EmailSender) Send(msg string) {
+    fmt.Printf("Connecting to %s... Email sent: %s\\n", e.SMTPServer, msg)
+}</code></pre>
+                            </div>
+                            <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-xl shadow-sm">
+                                <h5 class="font-bold text-emerald-900 mb-2">Worker 2: SMSSender</h5>
+                                <p class="text-sm text-emerald-800 mb-2">Needs a Twilio Account ID (its tools) to do its job.</p>
+                                <pre class="bg-emerald-900 text-emerald-100 p-3 rounded-lg text-xs font-mono overflow-x-auto"><code>type SMSSender struct {
+    TwilioID string
+}
+
+func (s SMSSender) Send(msg string) {
+    fmt.Printf("Using Twilio %s... SMS sent: %s\\n", s.TwilioID, msg)
+}</code></pre>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-stone-50 border border-stone-200 p-5 rounded-xl shadow-sm mt-4">
+                            <h5 class="font-bold text-stone-900 mb-2">The Interface & Manager</h5>
+                            <pre class="bg-stone-900 text-stone-100 p-4 rounded-lg text-sm font-mono overflow-x-auto"><code>// The Job Description
+type Notifier interface {
+    Send(msg string)
+}
+
+// The Manager Function (Polymorphic)
+func AlertUser(n Notifier, message string) {
+    n.Send(message) // Calls whatever worker was passed in!
+}
+
+func main() {
+    // We hire the workers and give them their specific tools
+    emailWorker := EmailSender{SMTPServer: "smtp.gmail.com"}
+    smsWorker := SMSSender{TwilioID: "TW_999"}
+    
+    // We pass the workers to the manager
+    AlertUser(emailWorker, "Your table is ready!")
+    AlertUser(smsWorker, "Your table is ready!")
+}</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 pt-8 border-t border-stone-200">
+                        <h4 class="font-bold text-stone-900 mb-4 text-xl">Summary: Why do it this way?</h4>
+                        <ul class="list-disc pl-5 space-y-2 text-stone-700">
+                            <li><strong>Structs are dumb data containers:</strong> They hold fields (like <code class="bg-stone-100 px-1 rounded">SMTPServer</code>).</li>
+                            <li><strong>Receiver functions attach logic:</strong> The <code class="bg-stone-100 px-1 rounded">func (e EmailSender) Send()</code> physically attaches behavior to that dumb data container, turning it into a "Worker".</li>
+                            <li><strong>Interfaces decouple the system:</strong> The <code class="bg-stone-100 px-1 rounded">AlertUser</code> function doesn't need to know if it's sending an email, an SMS, or a Push Notification. It just trusts that whatever you pass it has a <code class="bg-stone-100 px-1 rounded">Send()</code> method. If you add a <code class="bg-stone-100 px-1 rounded">PushNotifier</code> struct tomorrow, you don't have to rewrite <code class="bg-stone-100 px-1 rounded">AlertUser</code>!</li>
+                        </ul>
+                    </div>
+                `
+            }
+        ];
+
+        const app = {
+            state: {
+                activeTab: 'overview',
+                chartsRendered: false
+            },
+            
+            init() {
+                this.renderAccordion();
+                this.renderOverviewChart();
+            },
+
+            switchTab(tabId) {
+                // Update nav buttons
+                ['overview', 'concepts', 'performance'].forEach(id => {
+                    const btn = document.getElementById(`tab-${id}`);
+                    if(id === tabId) {
+                        btn.classList.remove('bg-white', 'text-stone-600', 'hover:text-stone-900');
+                        btn.classList.add('bg-white', 'text-teal-700', 'shadow-sm');
+                    } else {
+                        btn.classList.add('text-stone-600', 'hover:text-stone-900');
+                        btn.classList.remove('bg-white', 'text-teal-700', 'shadow-sm');
+                    }
+                    // Hide sections
+                    document.getElementById(`section-${id}`).classList.add('hidden');
+                });
+
+                // Show active section
+                document.getElementById(`section-${tabId}`).classList.remove('hidden');
+                this.state.activeTab = tabId;
+
+                // Render charts on demand if switching to performance tab
+                if (tabId === 'performance' && !this.state.chartsRendered) {
+                    this.renderPerformanceCharts();
+                    this.state.chartsRendered = true;
+                }
+            },
+
+            renderAccordion() {
+                const container = document.getElementById('accordion-container');
+                qaData.forEach((item, index) => {
+                    const el = document.createElement('div');
+                    el.className = 'bg-white border border-stone-200 rounded-xl shadow-sm overflow-hidden';
+                    el.innerHTML = `
+                        <button onclick="app.toggleAccordion(this)" class="w-full px-6 py-4 flex justify-between items-center bg-white hover:bg-stone-50 transition-colors focus:outline-none">
+                            <div class="text-left">
+                                <span class="text-xs font-bold text-teal-600 tracking-wider uppercase mb-1 block">${item.category}</span>
+                                <h3 class="text-lg font-semibold text-stone-800">${item.title}</h3>
+                            </div>
+                            <span class="chevron text-stone-400 text-xl transition-transform duration-300">&#9660;</span>
+                        </button>
+                        <div class="accordion-content border-t border-transparent">
+                            <div class="p-6 pt-2 bg-white">
+                                ${item.content}
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(el);
+                });
+            },
+
+            toggleAccordion(btn) {
+                const parent = btn.parentElement;
+                const content = parent.querySelector('.accordion-content');
+                
+                // Close all others
+                document.querySelectorAll('#accordion-container > div').forEach(div => {
+                    if (div !== parent) {
+                        div.classList.remove('accordion-active');
+                        div.querySelector('.accordion-content').style.borderColor = 'transparent';
+                    }
+                });
+
+                parent.classList.toggle('accordion-active');
+                if (parent.classList.contains('accordion-active')) {
+                    content.style.borderColor = '#e7e5e4'; // stone-200
+                } else {
+                    content.style.borderColor = 'transparent';
+                }
+            },
+
+            renderOverviewChart() {
+                const ctx = document.getElementById('overviewChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bubble',
+                    data: {
+                        datasets: [
+                            { label: 'Concurrency (Mutex, Channels)', data: [{x: 9, y: 9, r: 25}], backgroundColor: 'rgba(244, 63, 94, 0.7)', borderColor: 'rgb(225, 29, 72)' },
+                            { label: 'Memory (Slices, Maps, Escape)', data: [{x: 8, y: 8, r: 20}], backgroundColor: 'rgba(13, 148, 136, 0.7)', borderColor: 'rgb(15, 118, 110)' },
+                            { label: 'DB & System Design (Scale)', data: [{x: 7, y: 7.5, r: 18}], backgroundColor: 'rgba(217, 119, 6, 0.7)', borderColor: 'rgb(180, 83, 9)' },
+                            { label: 'Idiomatic Go & Std Lib', data: [{x: 5, y: 4, r: 10}], backgroundColor: 'rgba(168, 162, 158, 0.7)', borderColor: 'rgb(120, 113, 108)' }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'bottom', labels: { boxWidth: 12, usePointStyle: true, color: '#57534e' } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { title: { display: true, text: 'Frequency in Interviews (1-10)', color: '#78716c' }, min: 0, max: 10, grid: {color: '#f5f5f4'} },
+                            y: { title: { display: true, text: 'Technical Complexity (1-10)', color: '#78716c' }, min: 0, max: 10, grid: {color: '#f5f5f4'} }
+                        }
+                    }
+                });
+            },
+
+            renderPerformanceCharts() {
+                // Chart 1: Slice Capacity
+                const ctxSlice = document.getElementById('sliceChart').getContext('2d');
+                new Chart(ctxSlice, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Append 1', 'Append 2', 'Append 3', 'Append 4', 'Append 5 (Realloc)'],
+                        datasets: [
+                            {
+                                type: 'line',
+                                label: 'Length (Len)',
+                                data: [1, 2, 3, 4, 5],
+                                borderColor: 'rgb(244, 63, 94)',
+                                backgroundColor: 'rgb(244, 63, 94)',
+                                borderWidth: 3,
+                                tension: 0.1
+                            },
+                            {
+                                type: 'bar',
+                                label: 'Capacity (Cap)',
+                                data: [1, 2, 4, 4, 8],
+                                backgroundColor: 'rgba(13, 148, 136, 0.5)',
+                                borderColor: 'rgb(13, 148, 136)',
+                                borderWidth: 1,
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', labels: { color: '#57534e' } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        if (context.parsed.y !== null) { label += context.parsed.y + ' slots'; }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, max: 10, title: { display: true, text: 'Memory Slots', color: '#78716c' }, grid: {color: '#f5f5f4'} },
+                            x: { grid: {display: false} }
+                        }
+                    }
+                });
+
+                // Chart 2: Mutex Performance
+                const ctxMutex = document.getElementById('mutexChart').getContext('2d');
+                new Chart(ctxMutex, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Constant Overwrites (Same Key)', 'Append-Only Caches', 'Disjoint Keys (Diff Keys)'],
+                        datasets: [
+                            {
+                                label: 'sync.RWMutex Throughput',
+                                data: [80, 50, 60],
+                                backgroundColor: 'rgba(120, 113, 108, 0.8)',
+                                borderRadius: 4
+                            },
+                            {
+                                label: 'sync.Map Throughput',
+                                data: [15, 95, 90],
+                                backgroundColor: 'rgba(15, 118, 110, 0.8)',
+                                borderRadius: 4
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { position: 'top', labels: { color: '#57534e' } }
+                        },
+                        scales: {
+                            y: { display: false }, // Hide arbitrary numbers, focus on relative difference
+                            x: { 
+                                grid: {display: false},
+                                ticks: {
+                                    callback: function(val, index) {
+                                        // Wrap long labels
+                                        let label = this.getLabelForValue(val);
+                                        if (/\s/.test(label) && label.length > 16) {
+                                            return label.split(' ');
+                                        }
+                                        return label;
+                                    },
+                                    color: '#57534e'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        // Initialize App
+        document.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+    </script>
+</body>
+</html>
